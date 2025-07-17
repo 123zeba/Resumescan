@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Resume Analyzer</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- REMOVE THE <style> BLOCK AND ADD THIS LINK -->
+    <link rel="stylesheet" href="/static/style.css">
+
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <h1><i class="fa-solid fa-user-tie" style="color: var(--primary-color);"></i> AI Resume Analyzer</h1>
+          
+    <div class="nav-link-container">
+        <a href="/candidates" class="nav-link"><i class="fa-solid fa-users"></i> View Saved Candidates</a>
+    </div>
+   
+            <div class="match-rate-container">
+                <div class="match-rate-circle">
+                    <span id="matchRateValue">--%</span>
+                </div>
+                <div class="match-rate-label">Match Rate</div>
+            </div>
+
+            <form id="analysisForm">
+                <div class="form-group">
+                    <label for="resumeFile">1. Upload Resume (PDF)</label>
+                    <input type="file" id="resumeFile" name="resume" accept=".pdf" required>
+                </div>
+                <div class="form-group">
+                    <label for="jobDescription">2. Paste Job Description</label>
+                    <textarea id="jobDescription" name="job_description" placeholder="Paste the full job description here..." required></textarea>
+                </div>
+                <button type="submit" id="analyzeBtn" class="btn btn-primary">
+                    <i class="fa-solid fa-microchip"></i> Analyze & Scan
+                </button>
+            </form>
+            <div id="loader"><i class="fa-solid fa-spinner fa-spin"></i> Analyzing... Please wait.</div>
+
+            <div id="postAnalysisActions" class="post-analysis-actions">
+                <div class="form-group">
+                    <label>Actions</label>
+                    <button id="downloadBtn" class="btn btn-secondary"><i class="fa-solid fa-file-pdf"></i> Download Report</button>
+                </div>
+                <div class="form-group">
+                    <input type="email" id="emailRecipients" placeholder="hr@example.com, manager@example.com">
+                    <button id="sendEmailBtn" class="btn btn-secondary" style="margin-top: 10px;">
+                        <i class="fa-solid fa-paper-plane"></i> Send 
+                    </button>
+                    <small id="emailStatus"></small>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div id="placeholder">
+                <i class="fa-regular fa-file-lines"></i>
+                <h2>Your analysis will appear here</h2>
+                <p>Upload a resume and job description to get started.</p>
+            </div>
+
+            <div id="analysis-wrapper">
+                <div class="analysis-header">
+                    <div class="tab active">Resume</div>
+                    <!-- <div class="tab">Job Description</div> -->
+                </div>
+                <div id="result-container">
+                    <div id="result-content"></div>
+                </div>
+                <div id="chat-container">
+                    <div id="chat-history"></div>
+                    <form id="chat-form">
+                        <input type="text" id="chat-input" placeholder="Ask a follow-up question about this candidate..." required>
+                        <button type="submit" id="chatSendBtn" class="btn btn-primary" style="width: 120px;">
+                            <i class="fa-solid fa-share"></i> Send
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const analysisForm = document.getElementById('analysisForm');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const loader = document.getElementById('loader');
+        const placeholder = document.getElementById('placeholder');
+        const analysisWrapper = document.getElementById('analysis-wrapper');
+        const resultContent = document.getElementById('result-content');
+        const postAnalysisActions = document.getElementById('postAnalysisActions');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const sendEmailBtn = document.getElementById('sendEmailBtn');
+        const emailRecipientsInput = document.getElementById('emailRecipients');
+        const emailStatus = document.getElementById('emailStatus');
+        const chatContainer = document.getElementById('chat-container');
+        const chatHistory = document.getElementById('chat-history');
+        const chatForm = document.getElementById('chat-form');
+        const chatInput = document.getElementById('chat-input');
+        const chatSendBtn = document.getElementById('chatSendBtn');
+        const matchRateContainer = document.querySelector('.match-rate-container');
+        const matchRateValue = document.getElementById('matchRateValue');
+        const matchRateCircle = document.querySelector('.match-rate-circle');
+
+        // --- State ---
+        let currentAnalysisId = null;
+
+        // --- Event Listeners ---
+        analysisForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const resumeFile = document.getElementById('resumeFile').files[0];
+            const jobDescription = document.getElementById('jobDescription').value;
+
+            if (!resumeFile || !jobDescription.trim()) {
+                alert('Please upload a resume and provide a job description.');
+                return;
+            }
+
+            resetUI();
+            loader.style.display = 'block';
+            analyzeBtn.disabled = true;
+            analyzeBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Analyzing...';
+
+            const formData = new FormData();
+            formData.append('resume', resumeFile);
+            formData.append('job_description', jobDescription);
+
+            try {
+                const response = await fetch('/analyze', { method: 'POST', body: formData });
+                const data = await response.json();
+
+                if (!response.ok) throw new Error(data.detail || 'An unknown error occurred.');
+                
+                currentAnalysisId = data.analysis_id;
+                resultContent.innerHTML = marked.parse(data.analysis);
+                placeholder.style.display = 'none';
+                analysisWrapper.style.display = 'flex';
+                postAnalysisActions.style.display = 'block';
+                
+                // --- UPDATED: Use real score from backend ---
+                const realMatchRate = data.match_rate || 0; // Use the score from the server, or 0 if not found
+                matchRateValue.textContent = `${realMatchRate}%`;
+                matchRateCircle.style.background = `conic-gradient(var(--green-accent) ${realMatchRate}%, #e9ecef 0%)`;
+                matchRateContainer.style.display = 'block';
+
+
+            } catch (error) {
+                placeholder.style.display = 'flex';
+                placeholder.innerHTML = `<i class="fa-solid fa-circle-exclamation" style="color: var(--error-color);"></i><h2 style="color: var(--error-color);">Analysis Failed</h2><p>${error.message}</p>`;
+            } finally {
+                loader.style.display = 'none';
+                analyzeBtn.disabled = false;
+                analyzeBtn.innerHTML = '<i class="fa-solid fa-microchip"></i> Analyze & Scan';
+            }
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            if (currentAnalysisId) window.location.href = `/download/${currentAnalysisId}`;
+        });
+
+        sendEmailBtn.addEventListener('click', async () => {
+            const recipients = emailRecipientsInput.value.split(',').map(e => e.trim()).filter(e => e);
+            if (!currentAnalysisId || recipients.length === 0) {
+                alert('Please provide at least one valid email address.');
+                return;
+            }
+
+            emailStatus.textContent = 'Sending...';
+            emailStatus.style.color = 'var(--primary-color)';
+            sendEmailBtn.disabled = true;
+            sendEmailBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending';
+
+            try {
+                const response = await fetch('/email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ analysis_id: currentAnalysisId, recipients: recipients }),
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.detail);
+                emailStatus.textContent = data.message;
+                emailStatus.style.color = 'var(--success-color)';
+            } catch (error) {
+                emailStatus.textContent = `Error: ${error.message}`;
+                emailStatus.style.color = 'var(--error-color)';
+            } finally {
+                sendEmailBtn.disabled = false;
+                sendEmailBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Send ';
+            }
+        });
+
+        chatForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const prompt = chatInput.value.trim();
+            if (!prompt || !currentAnalysisId) return;
+
+            addMessageToChat('user', prompt);
+            chatInput.value = '';
+            chatSendBtn.disabled = true;
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ analysis_id: currentAnalysisId, prompt: prompt }),
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.detail);
+                addMessageToChat('assistant', data.response);
+            } catch (error) {
+                addMessageToChat('assistant', `*Error: ${error.message}*`);
+            } finally {
+                chatSendBtn.disabled = false;
+            }
+        });
+
+        // --- Helper Functions ---
+        function resetUI() {
+            currentAnalysisId = null;
+            analysisWrapper.style.display = 'none';
+            placeholder.style.display = 'flex';
+            placeholder.innerHTML = `<i class="fa-regular fa-file-lines"></i><h2>Your analysis will appear here</h2><p>Upload a resume and job description to get started.</p>`;
+            postAnalysisActions.style.display = 'none';
+            matchRateContainer.style.display = 'none';
+            resultContent.innerHTML = '';
+            chatHistory.innerHTML = '';
+            emailStatus.textContent = '';
+        }
+
+        function addMessageToChat(role, text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${role}`;
+            
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.className = `chat-bubble ${role}`;
+            bubbleDiv.innerHTML = marked.parse(text); 
+            
+            messageDiv.appendChild(bubbleDiv);
+            chatHistory.appendChild(messageDiv);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+    </script>
+</body>
+</html>

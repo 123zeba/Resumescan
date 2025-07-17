@@ -1,0 +1,26 @@
+# Environment variables
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# IDE / Editor specific
+.vscode/
+.idea/
+
+# Generated files and user uploads
+logs/
+analysis_reports/
+uploaded_cvs/
+database/
+
+# SQLite Database file if it's in the root
+recruitment.db
