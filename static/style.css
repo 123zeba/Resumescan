@@ -39,7 +39,7 @@ label {
     font-size: 0.9rem;
 }
 
-textarea, input[type="file"], input[type="email"], input[type="text"] {
+textarea, input[type="file"], input[type="email"], input[type="text"] ,select{
     width: 100%;
     padding: 12px;
     border: 1px solid var(--border-color);
@@ -508,4 +508,548 @@ tr:hover {
     color: var(--light-text);
     font-style: italic;
     font-size: 0.9rem;
+}
+
+/* --- Pagination --- */
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px 0;
+}
+
+.pagination {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: 5px;
+}
+
+.pagination li a {
+    color: var(--primary-color);
+    padding: 8px 12px;
+    text-decoration: none;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    transition: background-color 0.2s, color 0.2s;
+    cursor: pointer;
+    display: block;
+}
+
+.pagination li a:hover, .pagination li a.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.pagination li a.disabled {
+    color: var(--light-text);
+    pointer-events: none;
+    background-color: #f8f9fa;
+}
+/* --- Dashboard Overview Page --- */
+.dashboard-page {
+    background-color: var(--bg-color);
+    margin: 0;
+}
+
+.dashboard-container {
+    display: flex;
+    height: 100vh;
+}
+
+.dashboard-sidebar {
+    flex: 0 0 260px;
+    background: var(--container-bg);
+    padding: 20px;
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-header {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--secondary-color);
+    padding: 10px 0 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.nav-item {
+    padding: 12px 15px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--light-text);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: all 0.2s ease-in-out;
+}
+
+.nav-item:hover {
+    background-color: #f0f7ff;
+    color: var(--primary-color);
+}
+
+.nav-item.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.dashboard-main {
+    flex-grow: 1;
+    padding: 30px;
+    overflow-y: auto;
+}
+
+.dashboard-header h2 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin: 0;
+}
+.dashboard-header p {
+    color: var(--light-text);
+    margin-top: 5px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.stat-card {
+    background: var(--container-bg);
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.stat-card h4 {
+    margin: 0 0 10px 0;
+    color: var(--light-text);
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.stat-card p {
+    margin: 0;
+    font-size: 2.5rem;
+    font-weight: 600;
+    color: var(--secondary-color);
+}
+
+.content-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 30px;
+    margin-top: 30px;
+}
+
+.chart-container, .vacancies-container {
+    background: var(--container-bg);
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    height: 400px;
+    display: flex;
+    flex-direction: column;
+}
+
+.chart-container h3, .vacancies-container h3 {
+    margin: 0 0 20px 0;
+    font-size: 1.2rem;
+}
+
+.vacancy-tabs {
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.vacancy-tab-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    text-decoration: none;
+    color: var(--secondary-color);
+    font-weight: 500;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    transition: all 0.2s ease-in-out;
+}
+
+.vacancy-tab-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border-color: var(--primary-color);
+}
+
+.vacancy-tab-card .candidate-count {
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex
+
+/* Add this new class anywhere in the file */
+}
+/* === NEW STYLES FOR DASHBOARD OVERVIEW === */
+
+/* --- Header Bar --- */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 0 15px;
+    width: 400px;
+}
+
+.search-bar i {
+    color: var(--light-text);
+}
+
+.search-bar input {
+    border: none;
+    background: transparent;
+    padding: 12px 10px;
+    outline: none;
+    width: 100%;
+    font-size: 0.95rem;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+}
+
+.notification-bell {
+    position: relative;
+    font-size: 1.3rem;
+    color: var(--light-text);
+    cursor: pointer;
+}
+
+.notification-bell span {
+    position: absolute;
+    top: -5px;
+    right: -8px;
+    background-color: var(--error-color);
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.user-profile img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+.user-profile div {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-name {
+    font-weight: 600;
+    color: var(--secondary-color);
+}
+
+.user-role {
+    font-size: 0.85rem;
+    color: var(--light-text);
+}
+
+.user-profile > i {
+    color: var(--light-text);
+    font-size: 0.8rem;
+}
+
+/* --- Overview Header --- */
+.overview-header h2 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--secondary-color);
+}
+.overview-header p {
+    color: var(--light-text);
+    margin-top: 5px;
+    margin-bottom: 25px;
+}
+
+/* --- Stats Grid --- */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+}
+
+.stat-card {
+    background: var(--container-bg);
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.stat-info h4 {
+    margin: 0 0 8px 0;
+    color: var(--light-text);
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.stat-info p {
+    margin: 0;
+    font-size: 2.2rem;
+    font-weight: 600;
+    color: var(--secondary-color);
+}
+
+.stat-info .trend {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.trend.positive { color: var(--success-color); }
+.trend.negative { color: var(--error-color); }
+.trend i { margin-right: 5px; }
+
+.stat-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    color: white;
+}
+
+.stat-icon.blue { background-color: #4dabf7; }
+.stat-icon.green { background-color: #69db7c; }
+.stat-icon.orange { background-color: #ff922b; }
+.stat-icon.purple { background-color: #be4bdb; }
+
+/* --- Content Grid --- */
+.content-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 20px;
+    margin-top: 25px;
+}
+
+.content-card {
+    background: var(--container-bg);
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.content-card h3 {
+    margin: 0 0 20px 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--secondary-color);
+}
+
+.vacancy-item, .app-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.vacancy-item:last-child, .app-item:last-child {
+    border-bottom: none;
+}
+
+.vacancy-details, .app-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.vacancy-title, .app-name {
+    font-weight: 600;
+    color: var(--secondary-color);
+}
+
+.vacancy-jobcode, .app-position, .app-date {
+    font-size: 0.9rem;
+    color: var(--light-text);
+}
+
+.candidate-count {
+    background-color: #eef2f6;
+    color: var(--secondary-color);
+    border-radius: 12px;
+    padding: 4px 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* =================================== */
+/*          MODAL (POPUP) STYLES       */
+/* =================================== */
+
+/* The Modal container (the dark background overlay) */
+.modal {
+  position: fixed; /* Stay in place and cover the whole screen */
+  z-index: 1000;   /* Sit on top of everything else */
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent black background */
+  
+  /* Use flexbox to center the popup */
+  display: none; /* Initially hidden, JS will change this */
+  align-items: center;
+  justify-content: center;
+  
+  /* Smooth fade-in animation for the background */
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* The actual popup box */
+.modal-content {
+  background-color: #f8f9fa; /* Light grey background */
+  padding: 25px 30px;
+  border: none;
+  width: 90%;
+  max-width: 700px; /* Control the maximum width */
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  position: relative; /* Needed for positioning the close button */
+  
+  /* Smooth slide-down animation for the popup box */
+  animation: slideIn 0.4s ease-in-out;
+}
+
+/* The Close Button (X) */
+.close-btn {
+  color: #aaa;
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  font-size: 28px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.close-btn:hover,
+.close-btn:focus {
+  color: #333;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* Modal Header ("Send Interview Invitation") */
+.modal-content h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-weight: 600;
+  color: #212529;
+  border-bottom: 1px solid #dee2e6;
+  padding-bottom: 15px;
+}
+
+/* Styling for the form inside the modal */
+.modal-content .form-group {
+  margin-bottom: 15px;
+  text-align: left;
+}
+
+.modal-content .form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #495057;
+}
+
+.modal-content .form-group input[type="email"],
+.modal-content .form-group input[type="text"],
+.modal-content .form-group textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  box-sizing: border-box; /* Prevents padding from affecting width */
+}
+
+.modal-content .form-group textarea {
+    resize: vertical;
+    min-height: 200px;
+}
+
+.modal-content #sendFinalEmailBtn {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+}
+
+.modal-content #modalEmailStatus {
+    display: block;
+    margin-top: 10px;
+    text-align: center;
+}
+
+/* Keyframe animations for the smooth effect */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { transform: translateY(-50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }

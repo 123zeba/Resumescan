@@ -30,19 +30,59 @@
                 <div class="match-rate-label">Match Rate</div>
             </div>
 
+          
             <form id="analysisForm">
-                <div class="form-group">
-                    <label for="resumeFile">1. Upload Resume (PDF)</label>
-                    <input type="file" id="resumeFile" name="resume" accept=".pdf" required>
-                </div>
-                <div class="form-group">
-                    <label for="jobDescription">2. Paste Job Description</label>
-                    <textarea id="jobDescription" name="job_description" placeholder="Paste the full job description here..." required></textarea>
-                </div>
-                <button type="submit" id="analyzeBtn" class="btn btn-primary">
-                    <i class="fa-solid fa-microchip"></i> Analyze & Scan
-                </button>
-            </form>
+    <div class="form-group">
+        <label for="resumeFile">1. Upload Resume (PDF)</label>
+        <input type="file" id="resumeFile" name="resume" accept=".pdf" required>
+    </div>
+
+    <!-- ▼▼▼ ADD THIS NEW SECTION ▼▼▼ -->
+   
+    <!-- <div class="form-group">
+        <label for="vacancySelect">2. Select a Vacancy (Optional)</label>
+        <select id="vacancySelect">
+            <option value="" data-description="">-- Choose a job title --</option>
+            {% for vacancy in vacancies %}
+                <option value="{{ vacancy.subject }}" data-description="{{ vacancy.description | e }}" data-jobcode="{{ vacancy.jobcode }}" 
+            data-bdesc="{{ vacancy.bdesc | e }}">
+                    {{ vacancy.subject }}
+                </option>
+            {% endfor %}
+        </select>
+    
+    <!-- ▲▲▲ END OF NEW SECTION ▲▲▲ -->
+       {% if vacancies %}
+<div class="form-group">
+    <label for="vacancySelect">2. Select a Vacancy (Optional)</label>
+    <select id="vacancySelect">
+        <option value="" data-description="" data-jobcode="" data-bdesc="">-- Choose a job title --</option>
+        {% for vacancy in vacancies %}
+            <option value="{{ vacancy.subject }}" 
+                    data-description="{{ vacancy.description | e }}" 
+                    data-jobcode="{{ vacancy.jobcode }}" 
+                    data-bdesc="{{ vacancy.bdesc | e }}">
+                {{ vacancy.subject }}
+            </option>
+        {% endfor %}
+    </select>
+    </div>
+    {% endif %} 
+    <!-- ▼▼▼ ADD THESE TWO LINES ▼▼▼ -->
+    
+    <!-- ▲▲▲ END OF NEW LINES ▲▲▲ -->
+      <div class="form-group">
+        <!-- Update the label number -->
+        <label for="jobDescription">3. Paste Job Description</label>
+        <textarea id="jobDescription" name="job_description" placeholder="Paste the full job description here, or select a vacancy above..." required></textarea>
+    </div>
+    <button type="submit" id="analyzeBtn" class="btn btn-primary">
+        <i class="fa-solid fa-microchip"></i> Analyze & Scan
+    </button>
+
+
+   
+</form>
             <div id="loader"><i class="fa-solid fa-spinner fa-spin"></i> Analyzing... Please wait.</div>
 
             <div id="postAnalysisActions" class="post-analysis-actions">
@@ -87,9 +127,13 @@
             </div>
         </main>
     </div>
-
+</div>
     <script>
+
+        
         // --- DOM Elements ---
+         const vacancySelect = document.getElementById('vacancySelect');
+         const jobDescriptionTextarea = document.getElementById('jobDescription');
         const analysisForm = document.getElementById('analysisForm');
         const analyzeBtn = document.getElementById('analyzeBtn');
         const loader = document.getElementById('loader');
@@ -161,6 +205,39 @@
                 analyzeBtn.innerHTML = '<i class="fa-solid fa-microchip"></i> Analyze & Scan';
             }
         });
+    //      if (vacancySelect) {
+    //     vacancySelect.addEventListener('change', (event) => {
+    //         const selectedOption = event.target.options[event.target.selectedIndex];
+    //         const description = selectedOption.dataset.description;
+    //         jobDescriptionTextarea.value = description;
+    //     });
+    // }
+
+
+
+if (vacancySelect) {
+    vacancySelect.addEventListener('change', (event) => {
+        const selectedOption = event.target.options[event.target.selectedIndex];
+
+        // Get all the data from the selected option
+        const subject = selectedOption.value; // The job title is the option's value
+        const bdesc = selectedOption.dataset.bdesc;
+        const jobcode = selectedOption.dataset.jobcode;
+        const description = selectedOption.dataset.description;
+
+        // If the user chose the placeholder option, clear the textarea
+        if (!subject) {
+            jobDescriptionTextarea.value = '';
+            return;
+        }
+
+        // Construct the new formatted text for the textarea
+        const newTextContent = `Job Title: ${subject}\nJob Code: ${jobcode}\n\n${bdesc}\n\n${description}`;
+
+        // Set the textarea's value to our new combined string
+        jobDescriptionTextarea.value = newTextContent;
+    });
+}
 
         downloadBtn.addEventListener('click', () => {
             if (currentAnalysisId) window.location.href = `/download/${currentAnalysisId}`;

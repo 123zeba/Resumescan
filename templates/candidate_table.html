@@ -1,0 +1,75 @@
+{% if candidates %}
+<table class="candidates-table">
+    <thead>
+        <tr>
+            <th>Candidate Name</th>
+            <th>Position Applied For</th>
+            <th>Match Score</th>
+            <th>Application Date</th>
+            <th>Download CV</th>
+            <th>Download Report</th>
+            <th>Actions</th>
+            <th>Email Candidate</th> <!-- ▼▼▼ ADD THIS HEADER ▼▼▼ -->
+        </tr>
+    </thead>
+    <tbody>
+        {% for candidate in candidates %}
+        <tr id="candidate-row-{{ candidate.id }}">
+            <td>{{ candidate.name }}</td>
+            <td>{{ candidate.position }}</td>
+            <td>
+                <span class="score 
+                    {% if candidate.score >= 80 %}score-high
+                    {% elif candidate.score >= 60 %}score-medium
+                    {% else %}score-low
+                    {% endif %}">
+                    {{ candidate.score }}%
+                </span>
+            </td>
+            <td>{{ candidate.application_date }}</td>
+            <td>
+                {% if candidate.cv_filepath %}
+                    <a href="/download-cv/{{ candidate.id }}" class="cv-download-link" title="Download Original CV">
+                        <i class="fa-solid fa-file-arrow-down"></i> CV
+                    </a>
+                {% else %}
+                    <span class="no-cv">N/A</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if candidate.report_filepath %}
+                    <a href="/download-report/{{ candidate.id }}" class="cv-download-link" title="Download Analysis Report">
+                        <i class="fa-solid fa-file-pdf"></i> Report
+                    </a>
+                {% else %}
+                    <span class="no-cv">N/A</span>
+                {% endif %}
+            </td>
+            <td>
+                <button class="delete-btn" data-id="{{ candidate.id }}" title="Delete Candidate">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            </td>
+            <!-- ▼▼▼ ADD THIS ENTIRE CELL (td) ▼▼▼ -->
+            <td>
+                {% if candidate.score >= 60 %}
+                    <button class="email-btn" 
+                            data-id="{{ candidate.id }}" 
+                            data-name="{{ candidate.name }}" 
+                            title="Email Candidate">
+                        <i class="fa-solid fa-paper-plane"></i>Invite
+                    </button>
+                {% else %}
+                    <span class="no-cv">-</span>
+                {% endif %}
+            </td>
+            <!-- ▲▲▲ END OF NEW CELL ▲▲▲ -->
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="no-candidates">
+    <p>No candidates found for this vacancy.</p>
+</div>
+{% endif %}

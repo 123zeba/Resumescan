@@ -24,16 +24,25 @@ import sys
 import asyncio
 from typing import Tuple, Dict, Optional, List
 from functools import partial
+from pydantic import BaseModel
 
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from contextlib import asynccontextmanager
 
 
+
 import sqlite3
 from datetime import datetime
+import mysql.connector 
+from mysql.connector import Error 
+# --- Load Environment Variables ---
+load_dotenv()
 
-
+MYSQL_HOST = os.getenv("MYSQL_HOST")
+MYSQL_DATABASE = os.getenv("MYSQL_DATABASE")
+MYSQL_USER = os.getenv("MYSQL_USER")
+MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD")
 try:
     from bs4 import BeautifulSoup
 except ImportError:
@@ -41,8 +50,7 @@ except ImportError:
     print("Please run: pip install beautifulsoup4")
     BeautifulSoup = None
 
-# --- Load Environment Variables ---
-load_dotenv()
+
 
 # ### MODIFIED FOR FILE LOGGING AND REPORT STORAGE ###
 REPORTS_DIR = 'analysis_reports' # Define a directory for saved reports
@@ -87,6 +95,8 @@ SMTP_SERVER = os.getenv("SMTP_SERVER")
 SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
 SMTP_SENDER_EMAIL = os.getenv("SMTP_SENDER_EMAIL")
 SMTP_SENDER_PASSWORD = os.getenv("SMTP_SENDER_PASSWORD")
+
+
 
 # IMAP Configuration for Reading Emails
 IMAP_SERVER = os.getenv("IMAP_SERVER")
@@ -526,12 +536,152 @@ async def send_email_with_attachment(subject: str, body: str, recipients: List[s
         None,
         partial(_blocking_send_email, subject, body, recipients, attachment_buffer, filename)
     )
+# ... after send_email_with_attachment function ...
+
+def extract_email_from_text(text: str) -> Optional[str]:
+    """Extracts the first found email address from a block of text."""
+    # This regex is widely used for email validation
+    match = re.search(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', text)
+    if match:
+        return match.group(0)
+    return None
+
+def get_email_template(position: str, candidate_name: str) -> Tuple[str, str]:
+    """Selects an email template based on the job position."""
+    position_lower = position.lower()
+    
+    # ▼▼▼ CHECK FOR SALES/NON-TECHNICAL ROLES FIRST ▼▼▼
+    if any(keyword in position_lower for keyword in ['sales', 'account manager']):
+        subject = f"Next Steps: Your Application for the {position} role at UNIQUE COMPUTER SYSTEMS LLC"
+        body = f"""Dear {candidate_name},
+
+Thank you for your interest in UNIQUE COMPUTER SYSTEMS LLC. We have reviewed your application for the {position} position and are pleased to inform you that you have been shortlisted to move forward in our evaluation process.
+
+The next step in our process is an Initial Interview (HR Evaluation call).
+
+Guidance for Your Next Step: HR Evaluation Call
+• Purpose: This initial 30-minute call with our HR team is to learn more about your professional background, assess your communication skills, and discuss your alignment with the role.
+• What to Expect: A member of our HR team will be contacting you via email or phone within the next 2-3 business days to schedule a time that is convenient for you.
+
+We were impressed with your background and look forward to speaking with you soon.
+
+Best regards,
+The HR Team
+UNIQUE COMPUTER SYSTEMS LLC"""
+        return subject, body
+
+    # ▼▼▼ THEN CHECK FOR TECHNICAL ROLES ▼▼▼
+    if any(keyword in position_lower for keyword in ['developer', 'architect', 'engineer']):
+        subject = f"Next Steps: Your Application for the {position} role at UNIQUE COMPUTER SYSTEMS LLC"
+        body = f"""Dear {candidate_name},
+
+Thank you for your interest in UNIQUE COMPUTER SYSTEMS LLC. We have reviewed your application for the {position} position and are pleased to inform you that you have been shortlisted to move forward in our evaluation process.
+
+As per our hiring process for technical roles, the next step is an online technical assessment designed to evaluate your core competencies.
+
+Guidance for Your Next Step: Online Assessment
+• Test Link: [Insert Technical Test Link Here]
+• Duration: 1 Hour
+• Focus: This assessment will cover key areas relevant to the {position} position. Please ensure you are in a quiet environment with a stable internet connection.
+
+Upon successful completion of this assessment, a member of our HR team will contact you to discuss the subsequent stages.
+
+We were impressed with your background and look forward to learning more about you.
+
+Best regards,
+The HR Team
+UNIQUE COMPUTER SYSTEMS LLC"""
+        return subject, body
+
+    # Default Fallback Template (remains the same)
+    subject = f"Your Application for {position} at UNIQUE COMPUTER SYSTEMS LLC"
+    body = f"""Dear {candidate_name},
+
+Thank you for applying for the {position} role. We have reviewed your application and would like to invite you to the next step in our process.
+
+Our HR team will be in touch shortly with more details.
+
+Best regards,
+The HR Team
+UNIQUE COMPUTER SYSTEMS LLC"""
+    return subject, body
+
+def _blocking_send_plain_text_email(subject: str, body: str, recipient: str):
+    """Synchronous plain text email sending logic."""
+    if not all([SMTP_SERVER, SMTP_SENDER_EMAIL, SMTP_SENDER_PASSWORD]):
+        raise ValueError("SMTP service is not configured.")
+
+    msg = MIMEMultipart()
+    msg['From'] = SMTP_SENDER_EMAIL
+    msg['To'] = recipient
+    msg['Subject'] = subject
+    msg.attach(MIMEText(body, 'plain'))
+
+    try:
+        if SMTP_PORT == 465:
+            with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT) as server:
+                server.login(SMTP_SENDER_EMAIL, SMTP_SENDER_PASSWORD)
+                server.send_message(msg)
+        else:
+            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+                server.starttls()
+                server.login(SMTP_SENDER_EMAIL, SMTP_SENDER_PASSWORD)
+                server.send_message(msg)
+        logging.info(f"Plain text email sent successfully to: {recipient}")
+    except Exception as e:
+        logging.error(f"Failed to send plain text email: {e}", exc_info=True)
+        raise
+
+async def send_plain_text_email(subject: str, body: str, recipient: str):
+    """Asynchronously sends a plain text email."""
+    loop = asyncio.get_running_loop()
+    await loop.run_in_executor(
+        None,
+        partial(_blocking_send_plain_text_email, subject, body, recipient)
+    )
+# --- API Endpoints (Web UI) ---
+# @app.get("/", response_class=HTMLResponse)
+# async def read_root(request: Request):
+#     """Serves the main HTML page for manual uploads."""
+#     return templates.TemplateResponse("index.html", {"request": request})
+# main.py
 
 # --- API Endpoints (Web UI) ---
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
-    """Serves the main HTML page for manual uploads."""
-    return templates.TemplateResponse("index.html", {"request": request})
+    """Serves the main HTML page and populates it with vacancies from MySQL."""
+    vacancies = []
+    try:
+        # Only attempt to connect if all MySQL config variables are present
+        if all([MYSQL_HOST, MYSQL_DATABASE, MYSQL_USER, MYSQL_PASSWORD]):
+            logging.info("Connecting to MySQL to fetch vacancies...")
+            conn = mysql.connector.connect(
+                host=MYSQL_HOST,
+                database=MYSQL_DATABASE,
+                user=MYSQL_USER,
+                password=MYSQL_PASSWORD
+            )
+
+            if conn.is_connected():
+                cursor = conn.cursor(dictionary=True) # dictionary=True makes results easier to use
+                # As seen in your screenshot, fetching active careers
+                # query = "SELECT subject,bdesc,description FROM tblcareers WHERE isActive = 'y' ORDER BY subject"
+                query = "SELECT subject, bdesc, jobcode, description FROM tblcareers WHERE isActive = 'y' ORDER BY subject"
+                cursor.execute(query)
+                vacancies = cursor.fetchall()
+                cursor.close()
+                conn.close()
+                logging.info(f"Successfully fetched {len(vacancies)} active vacancies from MySQL.")
+        else:
+            logging.warning("MySQL environment variables not set. Skipping vacancy fetching.")
+
+    except Error as e:
+        logging.error(f"Failed to fetch vacancies from MySQL: {e}", exc_info=True)
+        vacancies = [] # Ensure vacancies is an empty list on error
+
+    return templates.TemplateResponse("index.html", {"request": request, "vacancies": vacancies})
+
+
 
 
 @app.get("/candidates", response_class=HTMLResponse)
@@ -723,7 +873,71 @@ async def email_analysis(request: Request):
     except Exception as e:
         logging.error(f"Email sending failed for analysis ID {analysis_id}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to send email: {e}")
+# ... after the /email endpoint ...
 
+class CandidateEmail(BaseModel):
+    to_email: str
+    subject: str
+    body: str
+
+@app.get("/get-email-details/{candidate_id}")
+async def get_email_details(candidate_id: int):
+    """
+    Fetches candidate details, extracts email from CV, and generates an email template.
+    """
+    cv_path = await asyncio.get_running_loop().run_in_executor(None, partial(_blocking_get_cv_path, candidate_id))
+    if not cv_path or not os.path.exists(cv_path):
+        raise HTTPException(status_code=404, detail="CV file not found for this candidate.")
+
+    try:
+        # Get other candidate details from DB
+        conn = sqlite3.connect(DATABASE_FILE)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("SELECT name, position FROM candidates WHERE id = ?", (candidate_id,))
+        candidate_data = cursor.fetchone()
+        conn.close()
+        if not candidate_data:
+            raise HTTPException(status_code=404, detail="Candidate record not found.")
+
+        # Extract text and email from CV
+        with open(cv_path, "rb") as f:
+            pdf_content = f.read()
+        
+        resume_text = extract_text_from_pdf(pdf_content)
+        candidate_email = extract_email_from_text(resume_text)
+
+        # Generate template
+        subject, body = get_email_template(candidate_data['position'], candidate_data['name'])
+
+        return JSONResponse(content={
+            "email": candidate_email,
+            "subject": subject,
+            "body": body
+        })
+
+    except Exception as e:
+        logging.error(f"Failed to get email details for candidate {candidate_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/send-candidate-email")
+async def send_candidate_email(email_data: CandidateEmail):
+    """
+    Sends a customized email to a candidate.
+    """
+    try:
+        await send_plain_text_email(
+            subject=email_data.subject,
+            body=email_data.body,
+            recipient=email_data.to_email
+        )
+        return JSONResponse(content={"message": "Email sent successfully!"})
+    except Exception as e:
+        logging.error(f"Failed to send candidate email to {email_data.to_email}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to send email: {e}")
+
+# ... existing download-cv endpoint ...
 
 def _blocking_get_cv_path(candidate_id: int) -> Optional[str]:
     """Synchronous function to retrieve the CV file path for a candidate from the database."""
@@ -1022,6 +1236,8 @@ async def process_job_application_email():
         return JSONResponse(content={"message": message})
     else:
         raise HTTPException(status_code=500, detail=f"Email processing failed: {message}")
+    
+
 
 # --- Scheduled Task Definition ---
 async def scheduled_email_check():
